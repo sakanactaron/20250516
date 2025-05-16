@@ -7,10 +7,18 @@
   <style>
     body {
       font-family: sans-serif;
-      margin: 60px;
+      margin: 60px; /* デフォルト（PC） */
       font-size: 18px;
       line-height: 1.6;
     }
+    
+    /* スマホ用 */
+    @media (max-width: 600px) {
+      body {
+        margin: 20px; /* 左右に20px余白、上下もスッキリ */
+      }
+    }
+
 
     .table-wrapper {
       overflow-x: auto;
