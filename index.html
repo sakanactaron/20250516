@@ -7,7 +7,7 @@
   <style>
     body {
       font-family: sans-serif;
-      margin: 20px 20px;
+      margin: 20px;
       font-size: 16px;
       line-height: 1.6;
     }
@@ -144,7 +144,7 @@
         choiceCell.className = "choices";
 
         for (let j = 0; j < choices; j++) {
-          const choice = String.fromCharCode(65 + j); // A, B, C, D
+          const choice = String.fromCharCode(65 + j);
           const input = document.createElement("input");
           input.type = "radio";
           input.name = `q${i}`;
@@ -164,29 +164,20 @@
       }
     });
 
-    // 修正: 選択された行のみをハイライト
-    tbody.addEventListener("change", e => {
+    // ハイライトを更新する（ラジオボタンの行を強調）
+    tbody.addEventListener("change", (e) => {
       if (e.target.matches("input[type='radio']")) {
-        const qName = e.target.name; // 例: "q2"
-        const qNumber = qName.replace("q", "");
-
-        // 全ての行のハイライトを解除
         document.querySelectorAll("#answer-table tbody tr").forEach(row => {
           row.classList.remove("highlight");
         });
 
-        // 対象のQ番号の行にハイライトを追加
-        const qRows = [...tbody.querySelectorAll("tr")].filter(tr => {
-          return tr.querySelector("td") && tr.querySelector("td").textContent === `Q${qNumber}`;
-        });
-
-        if (qRows.length > 0) {
-          qRows[0].classList.add("highlight");
+        const targetRow = e.target.closest("tr");
+        if (targetRow) {
+          targetRow.classList.add("highlight");
         }
       }
     });
 
-    // CSVエクスポート
     function exportCSV() {
       const now = new Date();
       const yyyy = now.getFullYear();
@@ -220,7 +211,6 @@
       document.body.removeChild(link);
     }
 
-    // CSVインポート
     function importCSV() {
       const input = document.getElementById("csvInput");
       const file = input.files[0];
@@ -241,6 +231,17 @@
           const radio = document.getElementById(inputId);
           if (radio) {
             radio.checked = true;
+          }
+        }
+        // 最後のチェック済み行をハイライト
+        const checked = tbody.querySelector("input[type='radio']:checked");
+        if (checked) {
+          const targetRow = checked.closest("tr");
+          if (targetRow) {
+            document.querySelectorAll("#answer-table tbody tr").forEach(row => {
+              row.classList.remove("highlight");
+            });
+            targetRow.classList.add("highlight");
           }
         }
         alert("CSVの内容を読み込みました。");
