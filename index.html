@@ -44,6 +44,11 @@
       border-bottom: 2px solid #4287f5;
     }
 
+    /* ハイライト行 */
+    .highlight {
+      background-color: #fff9c4 !important; /* 明るい黄色 */
+    }
+
     .choices {
       display: flex;
       gap: 8px;
@@ -86,21 +91,19 @@
         margin: 12px;
         font-size: 16px;
       }
-    
+
       .choices label {
         font-size: 16px;
       }
-    
+
       button {
         font-size: 16px;
         padding: 9px 18px;
       }
-    
+
       th, td {
         padding: 7px 10px;
       }
-    }
-
     }
   </style>
 </head>
@@ -143,8 +146,9 @@
 
     const tbody = document.querySelector("#answer-table tbody");
 
+    // 表の生成
     parts.forEach(({ part, from, to, choices }) => {
-      // パート見出しの行を挿入
+      // パート見出し行
       const partRow = document.createElement("tr");
       partRow.className = "part-row";
       const partCell = document.createElement("td");
@@ -155,6 +159,7 @@
 
       for (let i = from; i <= to; i++) {
         const row = document.createElement("tr");
+        row.setAttribute("data-q", `q${i}`);
 
         const qCell = document.createElement("td");
         qCell.textContent = `Q${i}`;
@@ -184,6 +189,43 @@
       }
     });
 
+    // ハイライト制御
+    let currentHighlight = 1;
+
+    function updateHighlight(newQ) {
+      // 前の行のハイライトを外す
+      const prevRow = document.querySelector(`tr[data-q='q${currentHighlight}']`);
+      if (prevRow) prevRow.classList.remove("highlight");
+
+      // 新しい行にハイライトを付ける
+      const newRow = document.querySelector(`tr[data-q='q${newQ}']`);
+      if (newRow) {
+        newRow.classList.add("highlight");
+        currentHighlight = newQ;
+        // スクロールも追従させたい場合は下記を有効化
+        // newRow.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+
+    // ラジオボタンにchangeイベントを追加
+    parts.forEach(({ from, to }) => {
+      for (let i = from; i <= to; i++) {
+        const radios = document.getElementsByName(`q${i}`);
+        radios.forEach(radio => {
+          radio.addEventListener("change", () => {
+            const nextQ = i + 1;
+            if (nextQ <= 200) {
+              updateHighlight(nextQ);
+            }
+          });
+        });
+      }
+    });
+
+    // 初期ハイライトはQ1
+    updateHighlight(1);
+
+    // CSVエクスポート
     function exportCSV() {
       let csv = "Part,Question,Answer\n";
       parts.forEach(({ part, from, to }) => {
@@ -209,6 +251,7 @@
       document.body.removeChild(link);
     }
 
+    // CSVインポート
     function importCSV() {
       const input = document.getElementById("csvInput");
       const file = input.files[0];
