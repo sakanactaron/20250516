@@ -7,113 +7,83 @@
   <style>
     body {
       font-family: sans-serif;
-      margin: 20px;
-      font-size: 14px;
-      line-height: 1.4;
+      margin: 20px 20px;
+      font-size: 16px;
+      line-height: 1.6;
     }
 
-    table {
-      border-collapse: collapse;
+    #answer-table {
       width: 100%;
+      border-collapse: collapse;
       table-layout: fixed;
-      overflow-wrap: break-word;
     }
 
-    th, td {
+    /* colgroupで幅固定したのでここでも指定 */
+    #answer-table col:first-child {
+      width: 40px;
+    }
+
+    /* ヘッダーの設定 */
+    #answer-table thead th {
       border: 1px solid #ccc;
-      padding: 6px 8px;
+      padding: 8px 6px;
       text-align: left;
+      font-weight: bold;
+      background: #eee;
+      font-size: 16px;
+    }
+
+    /* 問題番号列 */
+    #answer-table th:first-child,
+    #answer-table td:first-child {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-family: monospace, monospace;
+      padding: 8px 6px;
       vertical-align: middle;
     }
 
-    /* 問題番号列をもっと狭く */
-    #answer-table td:first-child {
-      width: 40px;
-      white-space: nowrap;
+    /* 選択肢列 */
+    #answer-table td.choices {
+      border: 1px solid #ccc;
+      padding: 8px 6px;
+      vertical-align: middle;
+      font-size: 16px;
     }
 
-    thead tr {
-      background-color: #eee;
-    }
-
-    tbody tr:nth-child(odd) {
+    /* 奇数行の背景色 */
+    #answer-table tbody tr:nth-child(odd) {
       background-color: #f9f9f9;
     }
 
-    /* Part見出し行 */
-    .part-row td {
-      background-color: #d0e6ff;
-      font-weight: bold;
-      font-size: 15px;
-      padding: 8px 8px;
-      border-top: 2px solid #4287f5;
-      border-bottom: 2px solid #4287f5;
-    }
-
-    /* ハイライト行 */
-    .highlight {
-      background-color: #fff9c4 !important; /* 明るい黄色 */
-    }
-
-    .choices {
-      display: flex;
-      gap: 6px; /* ラジオボタン間の隙間も狭く */
-      flex-wrap: nowrap;
-      justify-content: flex-start;
-      overflow: hidden;
-    }
-
-    /* ラジオボタンの右側パディングを狭く */
+    /* ラジオボタン */
     .choices label {
-      padding-right: 6px;
-      font-size: 14px;
-      white-space: nowrap;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
+      margin-right: 10px;
+      font-size: 16px;
+      user-select: none;
     }
 
     .choices input[type="radio"] {
       transform: scale(1.2);
-      margin: 0;
-      cursor: pointer;
-      flex-shrink: 0;
+      margin-right: 4px;
+      vertical-align: middle;
     }
 
     .controls {
-      margin-bottom: 12px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
+      margin-bottom: 16px;
+      font-size: 16px;
     }
 
     button {
-      font-size: 14px;
-      padding: 8px 14px;
+      font-size: 16px;
+      padding: 8px 16px;
       cursor: pointer;
     }
 
-    /* スマホなど画面幅狭い場合 */
-    @media (max-width: 600px) {
-      body {
-        margin: 12px;
-        font-size: 16px;
-      }
-
-      .choices label {
-        font-size: 16px;
-      }
-
-      button {
-        font-size: 16px;
-        padding: 9px 18px;
-      }
-
-      th, td {
-        padding: 7px 10px;
-      }
+    /* 黄色ハイライト */
+    .highlight {
+      background-color: #fff9c4; /* 薄い黄色 */
     }
   </style>
 </head>
@@ -123,7 +93,7 @@
 
   <div class="controls">
     <button onclick="exportCSV()">CSVでエクスポート</button>
-    <label>
+    <label style="margin-left: 20px;">
       CSVインポート:
       <input type="file" id="csvInput" accept=".csv" />
     </label>
@@ -133,6 +103,10 @@
   <hr />
 
   <table id="answer-table">
+    <colgroup>
+      <col style="width: 40px;">
+      <col>
+    </colgroup>
     <thead>
       <tr>
         <th>問題番号</th>
@@ -151,25 +125,26 @@
       { part: 5, from: 101, to: 130, choices: 4 },
       { part: 6, from: 131, to: 146, choices: 4 },
       { part: 7, from: 147, to: 170, choices: 4 },
-      { part: 8, from: 171, to: 200, choices: 4 },
+      { part: 8, from: 171, to: 200, choices: 4 }
     ];
 
     const tbody = document.querySelector("#answer-table tbody");
 
-    // 表の生成
+    // 各パートの見出しを表示しながら表を作る
     parts.forEach(({ part, from, to, choices }) => {
       // パート見出し行
       const partRow = document.createElement("tr");
-      partRow.className = "part-row";
       const partCell = document.createElement("td");
       partCell.colSpan = 2;
+      partCell.style.fontWeight = "bold";
+      partCell.style.backgroundColor = "#ddd";
       partCell.textContent = `Part ${part}`;
       partRow.appendChild(partCell);
       tbody.appendChild(partRow);
 
+      // 問題行
       for (let i = from; i <= to; i++) {
         const row = document.createElement("tr");
-        row.setAttribute("data-q", `q${i}`);
 
         const qCell = document.createElement("td");
         qCell.textContent = `Q${i}`;
@@ -179,7 +154,7 @@
         choiceCell.className = "choices";
 
         for (let j = 0; j < choices; j++) {
-          const choice = String.fromCharCode(65 + j);
+          const choice = String.fromCharCode(65 + j); // A, B, C, D
           const input = document.createElement("input");
           input.type = "radio";
           input.name = `q${i}`;
@@ -199,42 +174,59 @@
       }
     });
 
-    // ハイライト制御
-    let currentHighlight = 0; // 最初はハイライトなし
-
-    function updateHighlight(newQ) {
-      // すべての行のハイライトを外す
-      document.querySelectorAll("tr.highlight").forEach(row => {
+    // 現在チェックした最新行のハイライトをつける
+    function updateHighlight() {
+      // まず全行のハイライトを外す
+      document.querySelectorAll("#answer-table tbody tr").forEach(row => {
         row.classList.remove("highlight");
       });
 
-      // 新しい行だけハイライト
-      const newRow = document.querySelector(`tr[data-q='q${newQ}']`);
-      if (newRow) {
-        newRow.classList.add("highlight");
-        currentHighlight = newQ;
-        // スクロール追従が欲しい場合はコメント解除
-        // newRow.scrollIntoView({ behavior: "smooth", block: "center" });
+      // 最新に選択された問題番号を探す
+      let lastCheckedQ = null;
+      for (let i = 200; i >= 1; i--) {
+        const radios = document.getElementsByName(`q${i}`);
+        for (const r of radios) {
+          if (r.checked) {
+            lastCheckedQ = i;
+            break;
+          }
+        }
+        if (lastCheckedQ !== null) break;
+      }
+
+      if (lastCheckedQ !== null) {
+        // その問題番号の行にハイライトをつける
+        // tbodyの子要素はパート行＋問題行なので、パート行もあるから位置に注意
+        // 問題はpart見出し行を含むのでQ1は、Q1の行をquerySelectorで探すほうが安全
+
+        const qRows = [...tbody.querySelectorAll("tr")].filter(tr => {
+          return tr.querySelector("td") && tr.querySelector("td").textContent === `Q${lastCheckedQ}`;
+        });
+        if (qRows.length > 0) {
+          qRows[0].classList.add("highlight");
+        }
       }
     }
 
-    // ラジオボタンのchangeイベントをセット
-    parts.forEach(({ from, to }) => {
-      for (let i = from; i <= to; i++) {
-        const radios = document.getElementsByName(`q${i}`);
-        radios.forEach(radio => {
-          radio.addEventListener("change", () => {
-            updateHighlight(i);  // 選択した問題行をハイライト
-          });
-        });
+    // ラジオボタンがクリックされたらハイライト更新
+    tbody.addEventListener("change", e => {
+      if (e.target.matches("input[type='radio']")) {
+        updateHighlight();
       }
     });
 
-    // 初期はハイライトなし
-    currentHighlight = 0;
+    // 初期ハイライトはなし
 
     // CSVエクスポート
     function exportCSV() {
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const dd = String(now.getDate()).padStart(2, "0");
+      const hh = String(now.getHours()).padStart(2, "0");
+      const min = String(now.getMinutes()).padStart(2, "0");
+      const yyyymmddhhmm = `${yyyy}${mm}${dd}${hh}${min}`;
+
       let csv = "Part,Question,Answer\n";
       parts.forEach(({ part, from, to }) => {
         for (let i = from; i <= to; i++) {
@@ -250,19 +242,10 @@
         }
       });
 
-      // 日時をyyyymmddhhmm形式で取得
-      const now = new Date();
-      const yyyy = now.getFullYear();
-      const mm = String(now.getMonth() + 1).padStart(2, "0");
-      const dd = String(now.getDate()).padStart(2, "0");
-      const hh = String(now.getHours()).padStart(2, "0");
-      const min = String(now.getMinutes()).padStart(2, "0");
-      const datetime = `${yyyy}${mm}${dd}${hh}${min}`;
-
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = `toeic_answers_${datetime}.csv`;
+      link.download = `toeic_answers_${yyyymmddhhmm}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -291,6 +274,7 @@
             radio.checked = true;
           }
         }
+        updateHighlight();
         alert("CSVの内容を読み込みました。");
       };
       reader.readAsText(file);
