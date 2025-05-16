@@ -190,40 +190,38 @@
     });
 
     // ハイライト制御
-    let currentHighlight = 1;
+    let currentHighlight = 0; // 最初はハイライトなし
 
     function updateHighlight(newQ) {
-      // 前の行のハイライトを外す
-      const prevRow = document.querySelector(`tr[data-q='q${currentHighlight}']`);
-      if (prevRow) prevRow.classList.remove("highlight");
+      // すべての行のハイライトを外す
+      document.querySelectorAll("tr.highlight").forEach(row => {
+        row.classList.remove("highlight");
+      });
 
-      // 新しい行にハイライトを付ける
+      // 新しい行だけハイライト
       const newRow = document.querySelector(`tr[data-q='q${newQ}']`);
       if (newRow) {
         newRow.classList.add("highlight");
         currentHighlight = newQ;
-        // スクロールも追従させたい場合は下記を有効化
+        // スクロール追従が欲しい場合はコメント解除
         // newRow.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     }
 
-    // ラジオボタンにchangeイベントを追加
+    // ラジオボタンのchangeイベントをセット
     parts.forEach(({ from, to }) => {
       for (let i = from; i <= to; i++) {
         const radios = document.getElementsByName(`q${i}`);
         radios.forEach(radio => {
           radio.addEventListener("change", () => {
-            const nextQ = i + 1;
-            if (nextQ <= 200) {
-              updateHighlight(nextQ);
-            }
+            updateHighlight(i);  // 選択した問題行をハイライト
           });
         });
       }
     });
 
-    // 初期ハイライトはQ1
-    updateHighlight(1);
+    // 初期はハイライトなし
+    currentHighlight = 0;
 
     // CSVエクスポート
     function exportCSV() {
