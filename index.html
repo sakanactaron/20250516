@@ -26,6 +26,12 @@
       vertical-align: middle;
     }
 
+    /* 問題番号列を狭く */
+    #answer-table td:first-child {
+      width: 60px;
+      white-space: nowrap;
+    }
+
     thead tr {
       background-color: #eee;
     }
@@ -56,7 +62,9 @@
       justify-content: flex-start;
     }
 
+    /* ラジオボタンの右側にパディング */
     .choices label {
+      padding-right: 12px;
       font-size: 14px;
       white-space: nowrap;
       cursor: pointer;
@@ -239,7 +247,7 @@
           csv += `${part},Q${i},${answer}\n`;
         }
       });
-    
+
       // 日時をyyyymmddhhmm形式で取得
       const now = new Date();
       const yyyy = now.getFullYear();
@@ -248,16 +256,15 @@
       const hh = String(now.getHours()).padStart(2, "0");
       const min = String(now.getMinutes()).padStart(2, "0");
       const datetime = `${yyyy}${mm}${dd}${hh}${min}`;
-    
+
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = `toeic_answers_${datetime}.csv`;  // ファイル名に日時を追加
+      link.download = `toeic_answers_${datetime}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
-
 
     // CSVインポート
     function importCSV() {
