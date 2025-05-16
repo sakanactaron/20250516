@@ -2,13 +2,12 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TOEIC 回答用紙</title>
   <style>
     body {
       font-family: sans-serif;
-      margin: 10px;
+      margin: 60px;
       font-size: 18px;
       line-height: 1.6;
     }
@@ -28,14 +27,21 @@
       background-color: #f9f9f9;
     }
 
+    .choices {
+      white-space: nowrap;
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 12px;
+      align-items: center;
+    }
+
     .choices label {
-      margin-right: 14px;
       font-size: 18px;
     }
 
     .choices input[type="radio"] {
       transform: scale(1.5);
-      margin-right: 6px;
+      margin-right: 4px;
       vertical-align: middle;
     }
 
@@ -43,31 +49,34 @@
       margin-top: 20px;
     }
 
-    /* ボタンの文字サイズを変更 */
     button {
       font-size: 18px;
-      padding: 10px 20px; /* ボタンの余白 */
+      padding: 10px 20px;
     }
+
     @media (max-width: 600px) {
       body {
-        font-size: 12px;
-        margin: 10px;
+        font-size: 20px;
+        margin: 20px;
       }
-    
+
       .choices label {
-        font-size: 12px;
+        font-size: 20px;
       }
-    
+
+      .choices {
+        gap: 16px;
+      }
+
       button {
-        font-size: 12px;
-        padding: 12px 12px;
+        font-size: 20px;
+        padding: 12px 24px;
       }
-    
+
       table th, table td {
         padding: 12px 10px;
       }
     }
-
   </style>
 </head>
 <body>
@@ -110,7 +119,6 @@
 
     const tbody = document.querySelector("#answer-table tbody");
 
-    // 表の生成
     parts.forEach(({ part, from, to, choices }) => {
       for (let i = from; i <= to; i++) {
         const row = document.createElement("tr");
@@ -129,7 +137,7 @@
         const choiceCell = document.createElement("td");
         choiceCell.className = "choices";
         for (let j = 0; j < choices; j++) {
-          const choice = String.fromCharCode(65 + j); // A, B, C, D
+          const choice = String.fromCharCode(65 + j);
           const input = document.createElement("input");
           input.type = "radio";
           input.name = `q${i}`;
@@ -149,7 +157,6 @@
       }
     });
 
-    // CSVエクスポート
     function exportCSV() {
       let csv = "Part,Question,Answer\n";
       parts.forEach(({ part, from, to }) => {
@@ -175,7 +182,6 @@
       document.body.removeChild(link);
     }
 
-    // CSVインポート
     function importCSV() {
       const input = document.getElementById("csvInput");
       const file = input.files[0];
@@ -187,7 +193,7 @@
       const reader = new FileReader();
       reader.onload = function (e) {
         const lines = e.target.result.split("\n");
-        for (let i = 1; i < lines.length; i++) { // ヘッダーをスキップ
+        for (let i = 1; i < lines.length; i++) {
           const [part, question, answer] = lines[i].trim().split(",");
           if (!question || !answer) continue;
 
