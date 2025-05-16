@@ -26,12 +26,6 @@
       vertical-align: middle;
     }
 
-    /* 問題番号列を狭く */
-    #answer-table td:first-child {
-      width: 60px;
-      white-space: nowrap;
-    }
-
     thead tr {
       background-color: #eee;
     }
@@ -40,7 +34,6 @@
       background-color: #f9f9f9;
     }
 
-    /* Part見出し行 */
     .part-row td {
       background-color: #d0e6ff;
       font-weight: bold;
@@ -50,9 +43,8 @@
       border-bottom: 2px solid #4287f5;
     }
 
-    /* ハイライト行 */
     .highlight {
-      background-color: #fff9c4 !important; /* 明るい黄色 */
+      background-color: #fff9c4 !important;
     }
 
     .choices {
@@ -62,9 +54,7 @@
       justify-content: flex-start;
     }
 
-    /* ラジオボタンの右側にパディング */
     .choices label {
-      padding-right: 4px;
       font-size: 14px;
       white-space: nowrap;
       cursor: pointer;
@@ -93,7 +83,6 @@
       cursor: pointer;
     }
 
-    /* スマホなど画面幅狭い場合 */
     @media (max-width: 600px) {
       body {
         margin: 12px;
@@ -154,9 +143,7 @@
 
     const tbody = document.querySelector("#answer-table tbody");
 
-    // 表の生成
     parts.forEach(({ part, from, to, choices }) => {
-      // パート見出し行
       const partRow = document.createElement("tr");
       partRow.className = "part-row";
       const partCell = document.createElement("td");
@@ -197,41 +184,34 @@
       }
     });
 
-    // ハイライト制御
-    let currentHighlight = 0; // 最初はハイライトなし
+    // ハイライト機能
+    let currentHighlight = 0;
 
     function updateHighlight(newQ) {
-      // すべての行のハイライトを外す
       document.querySelectorAll("tr.highlight").forEach(row => {
         row.classList.remove("highlight");
       });
 
-      // 新しい行だけハイライト
       const newRow = document.querySelector(`tr[data-q='q${newQ}']`);
       if (newRow) {
         newRow.classList.add("highlight");
         currentHighlight = newQ;
-        // スクロール追従が欲しい場合はコメント解除
         // newRow.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     }
 
-    // ラジオボタンのchangeイベントをセット
     parts.forEach(({ from, to }) => {
       for (let i = from; i <= to; i++) {
         const radios = document.getElementsByName(`q${i}`);
         radios.forEach(radio => {
           radio.addEventListener("change", () => {
-            updateHighlight(i);  // 選択した問題行をハイライト
+            updateHighlight(i);
           });
         });
       }
     });
 
-    // 初期はハイライトなし
-    currentHighlight = 0;
-
-    // CSVエクスポート
+    // CSVエクスポート（日時付きファイル名）
     function exportCSV() {
       let csv = "Part,Question,Answer\n";
       parts.forEach(({ part, from, to }) => {
@@ -248,7 +228,6 @@
         }
       });
 
-      // 日時をyyyymmddhhmm形式で取得
       const now = new Date();
       const yyyy = now.getFullYear();
       const mm = String(now.getMonth() + 1).padStart(2, "0");
