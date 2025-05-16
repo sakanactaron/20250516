@@ -1,71 +1,297 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TOEIC 回答用紙</title>
   <style>
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+      font-size: 14px;
+      line-height: 1.4;
     }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      table-layout: fixed;
+      overflow-wrap: break-word;
+    }
+
     th, td {
       border: 1px solid #ccc;
-      padding: 8px;
-      text-align: center;
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: middle;
     }
+
+    /* 問題番号列を狭く */
+    #answer-table td:first-child {
+      width: 60px;
+      white-space: nowrap;
+    }
+
+    thead tr {
+      background-color: #eee;
+    }
+
+    tbody tr:nth-child(odd) {
+      background-color: #f9f9f9;
+    }
+
+    /* Part見出し行 */
+    .part-row td {
+      background-color: #d0e6ff;
+      font-weight: bold;
+      font-size: 15px;
+      padding: 8px 8px;
+      border-top: 2px solid #4287f5;
+      border-bottom: 2px solid #4287f5;
+    }
+
+    /* ハイライト行 */
     .highlight {
-      background-color: #ffff99;
+      background-color: #fff9c4 !important; /* 明るい黄色 */
+    }
+
+    .choices {
+      display: flex;
+      gap: 8px;
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+    }
+
+    /* ラジオボタンの右側にパディング */
+    .choices label {
+      padding-right: 12px;
+      font-size: 14px;
+      white-space: nowrap;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .choices input[type="radio"] {
+      transform: scale(1.2);
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .controls {
+      margin-bottom: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    button {
+      font-size: 14px;
+      padding: 8px 14px;
+      cursor: pointer;
+    }
+
+    /* スマホなど画面幅狭い場合 */
+    @media (max-width: 600px) {
+      body {
+        margin: 12px;
+        font-size: 16px;
+      }
+
+      .choices label {
+        font-size: 16px;
+      }
+
+      button {
+        font-size: 16px;
+        padding: 9px 18px;
+      }
+
+      th, td {
+        padding: 7px 10px;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>TOEIC 回答用紙</h1>
+
+  <h1>TOEIC 回答用紙（200問）</h1>
+
+  <div class="controls">
+    <button onclick="exportCSV()">CSVでエクスポート</button>
+    <label>
+      CSVインポート:
+      <input type="file" id="csvInput" accept=".csv" />
+    </label>
+    <button onclick="importCSV()">インポート</button>
+  </div>
+
+  <hr />
+
   <table id="answer-table">
     <thead>
       <tr>
-        <th>番号</th>
-        <th>A</th>
-        <th>B</th>
-        <th>C</th>
-        <th>D</th>
+        <th>問題番号</th>
+        <th>選択肢</th>
       </tr>
     </thead>
-    <tbody>
-      <!-- JavaScriptで生成される -->
-    </tbody>
+    <tbody></tbody>
   </table>
 
   <script>
-    const tbody = document.querySelector('#answer-table tbody');
+    const parts = [
+      { part: 1, from: 1, to: 6, choices: 4 },
+      { part: 2, from: 7, to: 31, choices: 3 },
+      { part: 3, from: 32, to: 70, choices: 4 },
+      { part: 4, from: 71, to: 100, choices: 4 },
+      { part: 5, from: 101, to: 130, choices: 4 },
+      { part: 6, from: 131, to: 146, choices: 4 },
+      { part: 7, from: 147, to: 170, choices: 4 },
+      { part: 8, from: 171, to: 200, choices: 4 },
+    ];
 
-    for (let i = 1; i <= 10; i++) {
-      const tr = document.createElement('tr');
-      const tdNum = document.createElement('td');
-      tdNum.textContent = `Q${i}`;
-      tr.appendChild(tdNum);
+    const tbody = document.querySelector("#answer-table tbody");
 
-      ['A', 'B', 'C', 'D'].forEach(choice => {
-        const td = document.createElement('td');
-        const input = document.createElement('input');
-        input.type = 'radio';
-        input.name = `q${i}`;
-        input.value = choice;
+    // 表の生成
+    parts.forEach(({ part, from, to, choices }) => {
+      // パート見出し行
+      const partRow = document.createElement("tr");
+      partRow.className = "part-row";
+      const partCell = document.createElement("td");
+      partCell.colSpan = 2;
+      partCell.textContent = `Part ${part}`;
+      partRow.appendChild(partCell);
+      tbody.appendChild(partRow);
 
-        // ✅ 選択時にハイライト更新
-        input.addEventListener('change', () => {
-          // 全体からハイライトを除去
-          document.querySelectorAll('#answer-table tr').forEach(row => {
-            row.classList.remove('highlight');
-          });
-          // この行にハイライト追加
-          tr.classList.add('highlight');
-        });
+      for (let i = from; i <= to; i++) {
+        const row = document.createElement("tr");
+        row.setAttribute("data-q", `q${i}`);
 
-        td.appendChild(input);
-        tr.appendChild(td);
+        const qCell = document.createElement("td");
+        qCell.textContent = `Q${i}`;
+        row.appendChild(qCell);
+
+        const choiceCell = document.createElement("td");
+        choiceCell.className = "choices";
+
+        for (let j = 0; j < choices; j++) {
+          const choice = String.fromCharCode(65 + j);
+          const input = document.createElement("input");
+          input.type = "radio";
+          input.name = `q${i}`;
+          input.id = `q${i}_${choice}`;
+          input.value = choice;
+
+          const label = document.createElement("label");
+          label.htmlFor = input.id;
+          label.textContent = choice;
+
+          choiceCell.appendChild(input);
+          choiceCell.appendChild(label);
+        }
+
+        row.appendChild(choiceCell);
+        tbody.appendChild(row);
+      }
+    });
+
+    // ハイライト制御
+    let currentHighlight = 0; // 最初はハイライトなし
+
+    function updateHighlight(newQ) {
+      // すべての行のハイライトを外す
+      document.querySelectorAll("tr.highlight").forEach(row => {
+        row.classList.remove("highlight");
       });
 
-      tbody.appendChild(tr);
+      // 新しい行だけハイライト
+      const newRow = document.querySelector(`tr[data-q='q${newQ}']`);
+      if (newRow) {
+        newRow.classList.add("highlight");
+        currentHighlight = newQ;
+        // スクロール追従が欲しい場合はコメント解除
+        // newRow.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+
+    // ラジオボタンのchangeイベントをセット
+    parts.forEach(({ from, to }) => {
+      for (let i = from; i <= to; i++) {
+        const radios = document.getElementsByName(`q${i}`);
+        radios.forEach(radio => {
+          radio.addEventListener("change", () => {
+            updateHighlight(i);  // 選択した問題行をハイライト
+          });
+        });
+      }
+    });
+
+    // 初期はハイライトなし
+    currentHighlight = 0;
+
+    // CSVエクスポート
+    function exportCSV() {
+      let csv = "Part,Question,Answer\n";
+      parts.forEach(({ part, from, to }) => {
+        for (let i = from; i <= to; i++) {
+          const radios = document.getElementsByName(`q${i}`);
+          let answer = "";
+          for (const radio of radios) {
+            if (radio.checked) {
+              answer = radio.value;
+              break;
+            }
+          }
+          csv += `${part},Q${i},${answer}\n`;
+        }
+      });
+
+      // 日時をyyyymmddhhmm形式で取得
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const dd = String(now.getDate()).padStart(2, "0");
+      const hh = String(now.getHours()).padStart(2, "0");
+      const min = String(now.getMinutes()).padStart(2, "0");
+      const datetime = `${yyyy}${mm}${dd}${hh}${min}`;
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `toeic_answers_${datetime}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // CSVインポート
+    function importCSV() {
+      const input = document.getElementById("csvInput");
+      const file = input.files[0];
+      if (!file) {
+        alert("CSVファイルを選択してください。");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const lines = e.target.result.split("\n");
+        for (let i = 1; i < lines.length; i++) {
+          const [part, question, answer] = lines[i].trim().split(",");
+          if (!question || !answer) continue;
+
+          const qNumber = question.replace("Q", "");
+          const inputId = `q${qNumber}_${answer}`;
+          const radio = document.getElementById(inputId);
+          if (radio) {
+            radio.checked = true;
+          }
+        }
+        alert("CSVの内容を読み込みました。");
+      };
+      reader.readAsText(file);
     }
   </script>
 </body>
