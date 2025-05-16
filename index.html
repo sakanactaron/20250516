@@ -1,53 +1,73 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TOEIC 回答用紙</title>
   <style>
     body {
       font-family: sans-serif;
-      margin: 60px;
-      font-size: 18px;
-      line-height: 1.6;
+      margin: 20px;
+      font-size: 14px;
+      line-height: 1.4;
     }
 
     table {
       border-collapse: collapse;
       width: 100%;
       table-layout: fixed;
+      overflow-wrap: break-word;
     }
 
     th, td {
       border: 1px solid #ccc;
-      padding: 10px 12px;
+      padding: 6px 8px;
       text-align: left;
-      word-wrap: break-word;
+      vertical-align: middle;
+    }
+
+    thead tr {
+      background-color: #eee;
     }
 
     tbody tr:nth-child(odd) {
       background-color: #f9f9f9;
     }
 
+    /* Part見出し行 */
+    .part-row td {
+      background-color: #d0e6ff;
+      font-weight: bold;
+      font-size: 15px;
+      padding: 8px 8px;
+      border-top: 2px solid #4287f5;
+      border-bottom: 2px solid #4287f5;
+    }
+
     .choices {
       display: flex;
-      justify-content: space-between;
+      gap: 8px;
       flex-wrap: nowrap;
+      justify-content: flex-start;
     }
 
     .choices label {
-      font-size: 16px;
+      font-size: 14px;
       white-space: nowrap;
-      margin-right: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .choices input[type="radio"] {
-      transform: scale(1.3);
-      margin-right: 2px;
+      transform: scale(1.2);
+      margin: 0;
+      cursor: pointer;
     }
 
     .controls {
-      margin-top: 20px;
+      margin-bottom: 12px;
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
@@ -55,27 +75,29 @@
     }
 
     button {
-      font-size: 18px;
-      padding: 10px 20px;
+      font-size: 14px;
+      padding: 8px 14px;
+      cursor: pointer;
     }
 
+    /* スマホなど画面幅狭い場合 */
     @media (max-width: 600px) {
       body {
-        margin: 20px;
-        font-size: 18px;
+        margin: 12px;
+        font-size: 13px;
       }
 
       .choices label {
-        font-size: 16px;
+        font-size: 13px;
       }
 
       button {
-        font-size: 16px;
-        padding: 10px 16px;
+        font-size: 13px;
+        padding: 6px 12px;
       }
 
       th, td {
-        padding: 8px;
+        padding: 5px 6px;
       }
     }
   </style>
@@ -93,12 +115,11 @@
     <button onclick="importCSV()">インポート</button>
   </div>
 
-  <hr>
+  <hr />
 
   <table id="answer-table">
     <thead>
       <tr>
-        <th>Part</th>
         <th>問題番号</th>
         <th>選択肢</th>
       </tr>
@@ -115,21 +136,23 @@
       { part: 5, from: 101, to: 130, choices: 4 },
       { part: 6, from: 131, to: 146, choices: 4 },
       { part: 7, from: 147, to: 170, choices: 4 },
-      { part: 8, from: 171, to: 200, choices: 4 }
+      { part: 8, from: 171, to: 200, choices: 4 },
     ];
 
     const tbody = document.querySelector("#answer-table tbody");
 
     parts.forEach(({ part, from, to, choices }) => {
+      // パート見出しの行を挿入
+      const partRow = document.createElement("tr");
+      partRow.className = "part-row";
+      const partCell = document.createElement("td");
+      partCell.colSpan = 2;
+      partCell.textContent = `Part ${part}`;
+      partRow.appendChild(partCell);
+      tbody.appendChild(partRow);
+
       for (let i = from; i <= to; i++) {
         const row = document.createElement("tr");
-
-        if (i === from) {
-          const partCell = document.createElement("td");
-          partCell.rowSpan = to - from + 1;
-          partCell.textContent = `Part ${part}`;
-          row.appendChild(partCell);
-        }
 
         const qCell = document.createElement("td");
         qCell.textContent = `Q${i}`;
@@ -137,6 +160,7 @@
 
         const choiceCell = document.createElement("td");
         choiceCell.className = "choices";
+
         for (let j = 0; j < choices; j++) {
           const choice = String.fromCharCode(65 + j);
           const input = document.createElement("input");
@@ -210,6 +234,5 @@
       reader.readAsText(file);
     }
   </script>
-
 </body>
 </html>
