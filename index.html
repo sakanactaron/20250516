@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
   <title>TOEIC 回答用紙</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       font-family: sans-serif;
       margin: 20px;
       font-size: 16px;
-      line-height: 1.4;
+      line-height: 1.6;
     }
 
     table {
@@ -22,95 +22,56 @@
       border: 1px solid #ccc;
       padding: 6px 8px;
       text-align: left;
-      vertical-align: middle;
-    }
-
-    th:nth-child(1), td:nth-child(1) {
-      width: 30%;
     }
 
     th:nth-child(2), td:nth-child(2) {
-      width: 70%;
+      width: 30%;
     }
 
-    thead tr {
-      background-color: #eee;
+    th:nth-child(3), td:nth-child(3) {
+      width: 70%;
     }
 
     tbody tr:nth-child(odd) {
       background-color: #f9f9f9;
     }
 
-    .part-row td {
-      background-color: #d0e6ff;
-      font-weight: bold;
-      font-size: 15px;
-      border-top: 2px solid #4287f5;
-      border-bottom: 2px solid #4287f5;
-    }
-
-    .part-row td:last-child {
-      background-color: #d0e6ff;
-    }
-
-    .highlight {
-      background-color: #fff9c4 !important;
-    }
-
     .choices {
       display: flex;
-      gap: 8px;
+      gap: 10px;
       flex-wrap: nowrap;
       justify-content: flex-start;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .choices label {
       font-size: 16px;
-      white-space: nowrap;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
     }
 
     .choices input[type="radio"] {
-      transform: scale(1.2);
-      margin: 0;
-      cursor: pointer;
+      transform: scale(1.4);
+      margin-right: 4px;
+      vertical-align: middle;
     }
 
     .controls {
-      margin-bottom: 12px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
+      margin-bottom: 20px;
     }
 
     button {
       font-size: 16px;
-      padding: 8px 14px;
-      cursor: pointer;
+      padding: 8px 16px;
     }
 
-    @media (max-width: 600px) {
-      body {
-        margin: 12px;
-        font-size: 16px;
-      }
+    .highlight {
+      background-color: #fff7cc !important;
+    }
 
-      .choices label {
-        font-size: 16px;
-      }
-
-      button {
-        font-size: 16px;
-        padding: 9px 18px;
-      }
-
-      th, td {
-        padding: 7px 10px;
-      }
+    .part-header {
+      background-color: #e0e0e0;
+      font-weight: bold;
+      text-align: center;
     }
   </style>
 </head>
@@ -120,14 +81,14 @@
 
   <div class="controls">
     <button onclick="exportCSV()">CSVでエクスポート</button>
-    <label>
+    <label style="margin-left: 20px;">
       CSVインポート:
       <input type="file" id="csvInput" accept=".csv" />
     </label>
     <button onclick="importCSV()">インポート</button>
   </div>
 
-  <hr />
+  <hr>
 
   <table id="answer-table">
     <thead>
@@ -148,24 +109,25 @@
       { part: 5, from: 101, to: 130, choices: 4 },
       { part: 6, from: 131, to: 146, choices: 4 },
       { part: 7, from: 147, to: 170, choices: 4 },
-      { part: 8, from: 171, to: 200, choices: 4 },
+      { part: 8, from: 171, to: 200, choices: 4 }
     ];
 
     const tbody = document.querySelector("#answer-table tbody");
+    let lastHighlightedRow = null;
 
     parts.forEach(({ part, from, to, choices }) => {
+      // パート見出し行を追加
       const partRow = document.createElement("tr");
-      partRow.className = "part-row";
       const partCell = document.createElement("td");
+      partCell.colSpan = 2;
+      partCell.className = "part-header";
       partCell.textContent = `Part ${part}`;
-      const emptyCell = document.createElement("td");
       partRow.appendChild(partCell);
-      partRow.appendChild(emptyCell);
       tbody.appendChild(partRow);
 
       for (let i = from; i <= to; i++) {
         const row = document.createElement("tr");
-        row.setAttribute("data-q", `q${i}`);
+        row.dataset.qnum = i;
 
         const qCell = document.createElement("td");
         qCell.textContent = `Q${i}`;
@@ -175,7 +137,7 @@
         choiceCell.className = "choices";
 
         for (let j = 0; j < choices; j++) {
-          const choice = String.fromCharCode(65 + j);
+          const choice = String.fromCharCode(65 + j); // A, B, C, D
           const input = document.createElement("input");
           input.type = "radio";
           input.name = `q${i}`;
@@ -186,6 +148,14 @@
           label.htmlFor = input.id;
           label.textContent = choice;
 
+          input.addEventListener("change", () => {
+            if (lastHighlightedRow) {
+              lastHighlightedRow.classList.remove("highlight");
+            }
+            row.classList.add("highlight");
+            lastHighlightedRow = row;
+          });
+
           choiceCell.appendChild(input);
           choiceCell.appendChild(label);
         }
@@ -195,31 +165,14 @@
       }
     });
 
-    // ハイライト機能
-    function updateHighlight(newQ) {
-      document.querySelectorAll("tr.highlight").forEach(row => {
-        row.classList.remove("highlight");
-      });
-
-      const newRow = document.querySelector(`tr[data-q='q${newQ}']`);
-      if (newRow) {
-        newRow.classList.add("highlight");
-      }
-    }
-
-    parts.forEach(({ from, to }) => {
-      for (let i = from; i <= to; i++) {
-        const radios = document.getElementsByName(`q${i}`);
-        radios.forEach(radio => {
-          radio.addEventListener("change", () => {
-            updateHighlight(i);
-          });
-        });
-      }
-    });
-
-    // CSVエクスポート（日時付きファイル名）
     function exportCSV() {
+      const now = new Date();
+      const yyyymmddhhmm = now.getFullYear().toString() +
+        String(now.getMonth() + 1).padStart(2, '0') +
+        String(now.getDate()).padStart(2, '0') +
+        String(now.getHours()).padStart(2, '0') +
+        String(now.getMinutes()).padStart(2, '0');
+
       let csv = "Part,Question,Answer\n";
       parts.forEach(({ part, from, to }) => {
         for (let i = from; i <= to; i++) {
@@ -235,24 +188,15 @@
         }
       });
 
-      const now = new Date();
-      const yyyy = now.getFullYear();
-      const mm = String(now.getMonth() + 1).padStart(2, "0");
-      const dd = String(now.getDate()).padStart(2, "0");
-      const hh = String(now.getHours()).padStart(2, "0");
-      const min = String(now.getMinutes()).padStart(2, "0");
-      const datetime = `${yyyy}${mm}${dd}${hh}${min}`;
-
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = `toeic_answers_${datetime}.csv`;
+      link.download = `toeic_answers_${yyyymmddhhmm}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
 
-    // CSVインポート
     function importCSV() {
       const input = document.getElementById("csvInput");
       const file = input.files[0];
@@ -273,7 +217,7 @@
           const radio = document.getElementById(inputId);
           if (radio) {
             radio.checked = true;
-            updateHighlight(qNumber);
+            radio.dispatchEvent(new Event("change"));
           }
         }
         alert("CSVの内容を読み込みました。");
@@ -281,5 +225,6 @@
       reader.readAsText(file);
     }
   </script>
+
 </body>
 </html>
