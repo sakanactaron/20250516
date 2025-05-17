@@ -4,57 +4,54 @@
   <meta charset="UTF-8">
   <title>TOEIC 回答用紙</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-<style>
-  body {
-    font-family: sans-serif;
-    margin: 12px;
-    font-size: 16px;
-  }
-
-  table {
-    border-collapse: collapse;
-    width: 100%;
-  }
-
-  th, td {
-    border: 1px solid #ccc;
-    padding: 4px 6px;
-    text-align: left;
-  }
-
-  .choices {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 8px;
-    align-items: center;
-    font-size: 16px;
-  }
-
-  .choices label {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-  }
-
-  .highlight {
-    background-color: #fff7cc;
-  }
-
-  td.part-header {
-    background-color: #e0f0ff; /* 青っぽい色 */
-    font-weight: bold;
-    text-align: center;
-  }
-
-  @media screen and (max-width: 600px) {
-    .choices {
-      flex-wrap: wrap;
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 12px;
+      font-size: 16px;
     }
-  }
-</style>
 
-  
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 4px 6px;
+      text-align: left;
+    }
+
+    .choices {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 8px;
+      align-items: center;
+      font-size: 16px;
+    }
+
+    .choices label {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .highlight {
+      background-color: #fff7cc;
+    }
+
+    td.part-header {
+      background-color: #e0f0ff;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    @media screen and (max-width: 600px) {
+      .choices {
+        flex-wrap: wrap;
+      }
+    }
+  </style>
 </head>
 <body>
 
@@ -67,6 +64,7 @@
       <input type="file" id="csvInput" accept=".csv" />
     </label>
     <button onclick="importCSV()">インポート</button>
+    <button onclick="clearAnswers()" style="margin-left: 20px; color: red;">すべてリセット</button>
   </div>
 
   <hr>
@@ -97,7 +95,6 @@
     let lastHighlightedRow = null;
 
     parts.forEach(({ part, from, to, choices }) => {
-      // パート見出し行を追加
       const partRow = document.createElement("tr");
       const partCell = document.createElement("td");
       partCell.colSpan = 2;
@@ -118,7 +115,7 @@
         choiceCell.className = "choices";
 
         for (let j = 0; j < choices; j++) {
-          const choice = String.fromCharCode(65 + j); // A, B, C, D
+          const choice = String.fromCharCode(65 + j);
           const input = document.createElement("input");
           input.type = "radio";
           input.name = `q${i}`;
@@ -135,6 +132,11 @@
             }
             row.classList.add("highlight");
             lastHighlightedRow = row;
+
+            // 🔐 ローカルストレージ保存
+            const storedAnswers = JSON.parse(localStorage.getItem("toeic-answers") || "{}");
+            storedAnswers[`q${i}`] = choice;
+            localStorage.setItem("toeic-answers", JSON.stringify(storedAnswers));
           });
 
           choiceCell.appendChild(input);
@@ -146,6 +148,17 @@
       }
     });
 
+    // 🧠 ローカルストレージから復元
+    const savedAnswers = JSON.parse(localStorage.getItem("toeic-answers") || "{}");
+    for (const [qKey, answer] of Object.entries(savedAnswers)) {
+      const input = document.getElementById(`${qKey}_${answer}`);
+      if (input) {
+        input.checked = true;
+        input.dispatchEvent(new Event("change"));
+      }
+    }
+
+    // CSV出力
     function exportCSV() {
       const now = new Date();
       const yyyymmddhhmm = now.getFullYear().toString() +
@@ -178,6 +191,7 @@
       document.body.removeChild(link);
     }
 
+    // CSVインポート
     function importCSV() {
       const input = document.getElementById("csvInput");
       const file = input.files[0];
@@ -189,6 +203,7 @@
       const reader = new FileReader();
       reader.onload = function (e) {
         const lines = e.target.result.split("\n");
+        const storedAnswers = {};
         for (let i = 1; i < lines.length; i++) {
           const [part, question, answer] = lines[i].trim().split(",");
           if (!question || !answer) continue;
@@ -199,11 +214,21 @@
           if (radio) {
             radio.checked = true;
             radio.dispatchEvent(new Event("change"));
+            storedAnswers[`q${qNumber}`] = answer;
           }
         }
+        localStorage.setItem("toeic-answers", JSON.stringify(storedAnswers));
         alert("CSVの内容を読み込みました。");
       };
       reader.readAsText(file);
+    }
+
+    // 🔄 ローカルストレージ＋画面リセット
+    function clearAnswers() {
+      if (confirm("すべての回答をリセットしてよろしいですか？")) {
+        localStorage.removeItem("toeic-answers");
+        location.reload();
+      }
     }
   </script>
 
