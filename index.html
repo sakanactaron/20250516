@@ -45,9 +45,12 @@
       background-color: #d0e6ff;
       font-weight: bold;
       font-size: 15px;
-      padding: 8px 8px;
       border-top: 2px solid #4287f5;
       border-bottom: 2px solid #4287f5;
+    }
+
+    .part-row td:last-child {
+      background-color: #d0e6ff;
     }
 
     .highlight {
@@ -154,9 +157,10 @@
       const partRow = document.createElement("tr");
       partRow.className = "part-row";
       const partCell = document.createElement("td");
-      partCell.colSpan = 2;
       partCell.textContent = `Part ${part}`;
+      const emptyCell = document.createElement("td");
       partRow.appendChild(partCell);
+      partRow.appendChild(emptyCell);
       tbody.appendChild(partRow);
 
       for (let i = from; i <= to; i++) {
@@ -269,7 +273,7 @@
           const radio = document.getElementById(inputId);
           if (radio) {
             radio.checked = true;
-            updateHighlight(qNumber); // ハイライトも反映
+            updateHighlight(qNumber);
           }
         }
         alert("CSVの内容を読み込みました。");
